@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-blue-svc
+  namespace: blue-green
+spec:
+  selector:
+    app: my-app
+    version: blue
+  ports:
+  - port: 80
+    targetPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-green-svc
+  namespace: blue-green
+spec:
+  selector:
+    app: my-app
+    version: green
+  ports:
+  - port: 80
+    targetPort: 3000
+---
+# Production traffic — patch selector to switch blue <-> green
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-production
+  namespace: blue-green
+spec:
+  selector:
+    app: my-app
+    version: blue
+  ports:
+  - port: 80
+    targetPort: 3000
+    name: http

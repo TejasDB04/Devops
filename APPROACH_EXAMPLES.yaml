@@ -1,0 +1,206 @@
+# APPROACH EXAMPLES - Compare All Three
+
+---
+## 🔵 WHAT WE CREATED (Current Implementation)
+
+### Our RBAC: Namespace + Role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role  # ← Namespace-scoped
+metadata:
+  name: developer-role
+  namespace: default
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+
+### Our Network Policy: Default Deny
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+spec:
+  podSelector: {}  # ← Block all
+  policyTypes:
+  - Ingress
+  - Egress
+  # No rules = DENY ALL!
+
+### Our Pod Security: Restricted
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+
+---
+## 🟢 ALTERNATIVE APPROACH 1: Multi-Team With ClusterRole
+
+# Better for: Teams spread across namespaces
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole  # ← Works in ALL namespaces
+metadata:
+  name: developer-cluster-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/logs"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets"]
+  verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: developer-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: developer-cluster-role
+subjects:
+- kind: ServiceAccount
+  name: developer
+  namespace: default
+# Can also reference multiple namespaces!
+- kind: Group
+  name: developers@example.com
+  apiGroup: rbac.authorization.k8s.io
+
+---
+## 🟡 ALTERNATIVE APPROACH 2: Fine-Grained Network Policies
+
+# Better for: Complex multi-tier apps
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-web-to-api
+spec:
+  podSelector:
+    matchLabels:
+      tier: api
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: web
+    ports:
+    - protocol: TCP
+      port: 8080
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-db
+spec:
+  podSelector:
+    matchLabels:
+      tier: database
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: api
+    ports:
+    - protocol: TCP
+      port: 5432
+
+---
+## 🔴 ALTERNATIVE APPROACH 3: Ultra-Secure Pod
+
+# Better for: Regulated/compliance environments
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-app-ultra
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 2000
+    seccompProfile:
+      type: RuntimeDefault
+    seLinuxOptions:
+      level: "s0:c123,c456"
+
+  containers:
+  - name: app
+    image: k8s-app:latest
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+      readOnlyRootFilesystem: true
+    
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    
+    volumeMounts:
+    - name: tmp
+      mountPath: /tmp
+    - name: secrets
+      mountPath: /var/secrets
+      readOnly: true
+
+  volumes:
+  - name: tmp
+    emptyDir: {}
+  - name: secrets
+    secret:
+      secretName: app-credentials
+      defaultMode: 0400
+
+---
+## 📊 QUICK REFERENCE: Current vs Alternatives
+
+### RBAC:
+Current (Namespace):
+- Scope: default namespace ONLY
+- Type: Role + RoleBinding  
+- Works for: Single team in one namespace
+- Can access: ✅ Pods, Logs, Deployments
+
+Alternative (ClusterRole):
+- Scope: ALL namespaces
+- Type: ClusterRole + ClusterRoleBinding
+- Works for: Multiple teams/namespaces
+- Can access: ✅ Same but across all namespaces
+
+---
+
+### Network Policy:
+Current (Default Deny):
+- Strategy: Block all, allow specific
+- Allows: Ingress from ingress-nginx only
+- Best for: High security
+- Performance: Fast (default is deny)
+
+Alternative (Segmented):
+- Strategy: Allow web→api→db path only
+- Allows: Specific pod-to-pod communication
+- Best for: Clear application tiers
+- Performance: Medium (many rules)
+
+---
+
+### Pod Security:
+Current (Restricted):
+- User: Non-root (UID 1000)
+- Filesystem: Writable (with emptyDir)
+- Capabilities: Dropped (in container)
+- Best for: Production applications
+
+Alternative (Ultra-Secure):
+- User: Non-root with groups
+- Filesystem: Read-only (enforced)
+- Capabilities: Dropped + seccomp
+- Best for: Compliance/regulated

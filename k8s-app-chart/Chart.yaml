@@ -1,0 +1,16 @@
+apiVersion: v2
+name: k8s-app
+description: A Helm chart for k8s-app - Node.js Kubernetes Application
+type: application
+version: 1.0.0
+appVersion: "2.0"
+maintainers:
+  - name: DevOps Team
+    email: devops@example.com
+keywords:
+  - kubernetes
+  - nodejs
+  - docker
+home: https://github.com/your-org/k8s-app
+sources:
+  - https://github.com/your-org/k8s-app

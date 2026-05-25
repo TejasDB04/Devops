@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Secrets & certificates (never commit)
+.env
+.env.*
+*.key
+*.crt
+*.pfx
+*.pem
+app.key
+app.crt
+app.pfx
+temp.pfx
+tls-secret.yaml
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs & temp
+*.log
+npm-debug.log*
+.tmp/
+
+# Velero local credentials
+labs/velero/credentials-velero
+credentials-velero

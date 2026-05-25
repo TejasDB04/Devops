@@ -1,0 +1,24 @@
+# Point repoURL to YOUR Git repo after pushing this project to GitHub.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: k8s-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/YOUR_USERNAME/kubernates.git
+    targetRevision: main
+    path: k8s-app-chart
+    helm:
+      valueFiles:
+        - values-dev.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

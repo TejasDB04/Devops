@@ -1,0 +1,47 @@
+# Development Environment Values
+# Minimal resources, single replica, no HPA
+
+replicaCount: 1
+
+image:
+  repository: k8s-app
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: app-dev.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+
+podLabels:
+  tier: web
+  environment: development

@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-app
+  namespace: default
+spec:
+  # Use the developer service account (limited permissions!)
+  serviceAccountName: developer
+  
+  securityContext:
+    runAsNonRoot: true           # Must NOT run as root
+    runAsUser: 1000              # Run as user ID 1000
+    seccompProfile:
+      type: RuntimeDefault        # Use default seccomp profile
+  
+  containers:
+  - name: app
+    image: k8s-app:latest
+    
+    securityContext:
+      allowPrivilegeEscalation: false  # Cannot escalate to root!
+      capabilities:
+        drop:
+        - ALL  # Drop all dangerous Linux capabilities
+      readOnlyRootFilesystem: true  # Read-only root filesystem
+    
+    ports:
+    - containerPort: 3000
+    
+    # Need writable volume for nginx to write logs and temp files
+    volumeMounts:
+    - name: tmp
+      mountPath: /tmp
+    - name: var-cache
+      mountPath: /var/cache/nginx
+    - name: var-run
+      mountPath: /var/run
+  
+  # Create temporary writable volumes (emphemeral)
+  volumes:
+  - name: tmp
+    emptyDir: {}
+  - name: var-cache
+    emptyDir: {}
+  - name: var-run
+    emptyDir: {}

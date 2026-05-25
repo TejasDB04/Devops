@@ -1,0 +1,16 @@
+# Helm values for: helm install loki grafana/loki-stack -f loki-stack-values.yaml -n monitoring
+# Lightweight centralized logging (pairs with Grafana in prometheus-grafana-simple.yaml)
+
+loki:
+  enabled: true
+  persistence:
+    enabled: false  # set true + storageClass if you want persistent logs on Docker Desktop
+
+promtail:
+  enabled: true
+  config:
+    clients:
+      - url: http://loki:3100/loki/api/v1/push
+
+grafana:
+  enabled: false  # use standalone Grafana from prometheus-grafana-simple.yaml

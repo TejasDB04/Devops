@@ -1,0 +1,25 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: developer-role
+  namespace: default
+rules:
+# Developers can view pods
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+
+# Developers can view pod logs
+- apiGroups: [""]
+  resources: ["pods/logs"]
+  verbs: ["get", "list"]
+
+# Developers can view deployments
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list"]
+
+# Developers can view services
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]

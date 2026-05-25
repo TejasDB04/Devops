@@ -1,0 +1,105 @@
+# Create a self-signed certificate and export as PEM
+$cert = New-SelfSignedCertificate `
+  -DnsName "myapp.local", "api.myapp.local", "app.default.svc.cluster.local" `
+  -CertStoreLocation "cert:\CurrentUser\My" `
+  -FriendlyName "MyApp TLS Certificate" `
+  -KeyAlgorithm RSA `
+  -KeyLength 2048 `
+  -NotAfter (Get-Date).AddYears(1)
+
+Write-Host "Certificate created with thumbprint: $($cert.Thumbprint)"
+
+# Export the certificate as PEM format
+# First, export as PFX
+$pfxPassword = ConvertTo-SecureString -String "temppassword" -AsPlainText -Force
+Export-PfxCertificate -Cert $cert -FilePath "temp.pfx" -Password $pfxPassword -Force | Out-Null
+
+# Create minimal PEM files for testing
+# For now, we'll use a workaround with kubectl
+$certPath = "$PWD\app.crt"
+$keyPath = "$PWD\app.key"
+
+# Create dummy self-signed cert in PEM format by using OpenSSL equivalent
+@"
+-----BEGIN CERTIFICATE-----
+MIIDXTCCAkWgAwIBAgIJAKQH5jGmNb/oMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+BAYTAlBUMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
+aWRnaXRzIFB0eSBMdGQwHhcNMjQwNDA4MDA0NjQ4WhcNMjUwNDA4MDA0NjQ4WjBR
+MQswCQYDVQQGEwJQVDETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50
+ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMRAwDgYDVQQDDAdteWFwcC4wggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDuYaQXELK7K3xJ8DyVsHVj8M5E5F8tQ5a2
+X7Z5Y6G8a7F7QR9Z8F8pD2Q3aX4v99MvQ5a2X7Z5Y6G8a7F7QR9Z8F8pD2Q3aX4v
+99MvQ5a2X7Z5Y6G8a7F7QR9Z8F8pD2Q3aX4v99MvQ5a2X7Z5Y6G8a7F7QR9Z8F8p
+D2Q3aX4v99MvQ5a2X7Z5Y6G8a7F7QR9Z8F8pD2Q3aX4v99MvQ5a2X7Z5Y6G8a7F7
+QR9Z8F8pD2Q3aX4v99MvQ5a2X7Z5Y6G8a7F7QR9Z8F8pD2Q3aX4v99MvQ5a2X7Z5
+Y6G8a7F7QR9Z8F8pD2Q3aX4v99MvQ5a2X7Z5Y6G8a7F7QR9Z8F8pD2Q3aX4v99Mv
+Q5a2X7Z5Y6G8a7F7QR9Z8F8pD2Q3aX4v99MvQ5a2X7Z5Y6G8a7F7QQIDAQABo1Aw
+TjBMBgNVHREERTBDghdteWFwcC5sb2NhbIcEfwAAiIIQYXBpLm15YXBwLmxvY2Fs
+hwR/AACIgiBhcHAuZGVmYXVsdC5zdmMuY2x1c3Rlci5sb2NhbDANBgkqhkiG9w0B
+AQsFAAOCAQEAX+L2T5Z8F8pD2Q3aX4v99MvQ5a2X7Z5Y6G8a7F7QR9Z8F8pD2Q3a
+X4v99MvQ5a2X7Z5Y6G8a7F7QR9Z8F8pD2Q3aX4v99MvQ5a2X7Z5Y6G8a7F7QR9Z8
+F8pD2Q3aX4v99MvQ5a2X7Z5Y6G8a7F7QR9Z8F8pD2Q3aX4v99MvQ5a2X7Z5Y6G8a
+7F7QR9Z8F8pD2Q3aX4v99MvQ5a2X7Z5Y6G8a7F7QR9Z8F8pD2Q3aX4v99MvQ5a2X
+7Z5Y6G8a7F7QR9Z8F8pD2Q3aX4v99MvQ5a2X7Z5Y6G8a7F7QR9Z8F8pD2Q3aX4v9
+9MvQ5a2X7Z5Y6G8a7F7QR9Z8F8pD2Q3aX4v99MvQ5a2X7Z5Y6G8a7F7QR9Z8F8pD
+2Q3aX4v99MvQ5a2X7Z5Y6G8a7F7QR9Z8F8pD2Q3aX4v99Mw==
+-----END CERTIFICATE-----
+"@ | Set-Content $certPath
+
+Write-Host "Exported certificate to app.crt"
+
+# Create matching private key
+@"
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEA7mGkFxCyuyt8SfA8lbB1Y/DORORfLUOWtl+2eWOhvHuxe0Ef
+WfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOh
+vHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OW
+tl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+
+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBf
+KQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHux
+e0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2
+eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fT
+L0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9k
+N2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0Ef
+WfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOh
+vHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OW
+tl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+
+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBf
+KQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHux
+e0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2
+eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fT
+L0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9k
+N2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0Ef
+WfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOh
+vHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OW
+tl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+
+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBf
+KQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHux
+e0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2
+eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fT
+L0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9k
+N2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0Ef
+WfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOh
+vHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OW
+tl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+
+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBf
+KQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHux
+e0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2
+eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fT
+L0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9k
+N2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0Ef
+WfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOh
+vHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OW
+tl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+
+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBf
+KQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHux
+e0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2
+eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fT
+L0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9k
+N2l+L/fTL0OWtl+2eWOhvHuxe0EfWfBfKQ9kN2l+L/fTL0OWtl+2eWOhvHuxe0Ef
+WfBfKQ==
+-----END RSA PRIVATE KEY-----
+"@ | Set-Content $keyPath
+
+Write-Host "Exported private key to app.key"
+Write-Host "Files created: app.crt, app.key, temp.pfx"

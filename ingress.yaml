@@ -1,0 +1,56 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: default
+  annotations:
+    # Nginx Ingress Controller annotations
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+    # SSL redirect (disabled for testing)
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  # Ingress Class (for nginx-ingress controller)
+  ingressClassName: nginx
+  
+  # TLS/SSL Configuration
+  tls:
+  - hosts:
+    - myapp.local
+    - api.myapp.local
+    secretName: app-tls-cert
+  
+  rules:
+  # Main domain routing
+  - host: myapp.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: k8s-app-service
+            port:
+              number: 80
+  
+  # API subdomain routing
+  - host: api.myapp.local
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: k8s-app-service
+            port:
+              number: 80
+      - path: /health
+        pathType: Exact
+        backend:
+          service:
+            name: k8s-app-service
+            port:
+              number: 80
