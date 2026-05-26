@@ -1,0 +1,24 @@
+# Allow traffic to k8s-app after default-deny (Docker Desktop / lab friendly)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-k8s-app
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: k8s-app
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - ports:
+    - protocol: TCP
+      port: 3000
+  egress:
+  - ports:
+    - protocol: UDP
+      port: 53
+  - ports:
+    - protocol: TCP
+      port: 53

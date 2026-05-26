@@ -16,6 +16,7 @@ spec:
   containers:
   - name: app
     image: k8s-app:latest
+    imagePullPolicy: IfNotPresent
     
     securityContext:
       allowPrivilegeEscalation: false  # Cannot escalate to root!

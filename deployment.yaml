@@ -20,6 +20,7 @@ spec:
       labels:
         app: k8s-app
         version: v1
+        tier: web
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "3000"

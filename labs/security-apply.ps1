@@ -8,6 +8,7 @@ $files = @(
     "admin-rolebinding.yaml",
     "default-deny-policy.yaml",
     "allow-ingress-to-web.yaml",
+    "labs\security\allow-k8s-app.yaml",
     "db-secret.yaml",
     "secret-reader-role.yaml",
     "secret-reader-binding.yaml",
@@ -28,7 +29,12 @@ foreach ($f in $files) {
     }
 }
 
+Write-Host "Labeling k8s-app deployment (tier=web)..." -ForegroundColor Cyan
+kubectl apply -f (Join-Path $Root "deployment.yaml") 2>$null
+
 Write-Host "`nRBAC check (developer should be 'no' for delete):" -ForegroundColor Yellow
 kubectl auth can-i delete deployments --as=system:serviceaccount:default:developer 2>$null
+kubectl auth can-i delete deployments --as=system:serviceaccount:default:admin-user 2>$null
 kubectl get networkpolicies
-Write-Host "Done. See SECURITY_HANDS_ON.md for full verification." -ForegroundColor Green
+Write-Host "`nRun full verification: .\labs\security-verify.ps1" -ForegroundColor Green
+Write-Host "Guide: SECURITY_LAB_TODAY.md" -ForegroundColor Green

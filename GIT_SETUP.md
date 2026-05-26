@@ -15,11 +15,18 @@ git commit -m "DevOps labs and health tests"
 ## Connect to GitHub
 
 1. Create a new repo on https://github.com/new (name: `kubernates`, **no** README/license — empty repo).
-2. Run (replace `YOUR_USERNAME`):
+2. Run (example for repo **Devops** under **TejasDB04**):
 
 ```powershell
-git remote add origin https://github.com/YOUR_USERNAME/kubernates.git
+git remote remove origin
+git remote add origin https://github.com/TejasDB04/Devops.git
 git push -u origin main
+```
+
+If `origin` already exists, use `set-url` instead of `add`:
+
+```powershell
+git remote set-url origin https://github.com/TejasDB04/Devops.git
 ```
 
 ## GitHub Actions secrets (for CI/CD pipeline)
